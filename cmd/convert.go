@@ -55,7 +55,16 @@ func NewConvertCmd() *cobra.Command {
 }
 
 func convert(schemaFile string) error {
-	openApi, err := openapi.LoadOpenApiSchema(schemaFile)
+	var openApi *openapi.OpenAPI
+	var err error
+	if filepath.Ext(schemaFile) == ".yaml" || filepath.Ext(schemaFile) == ".yml" {
+		openApi, err = openapi.LoadOpenApiYamlSchema(schemaFile)
+	} else if filepath.Ext(schemaFile) == ".json" {
+		openApi, err = openapi.LoadOpenApiJsonSchema(schemaFile)
+	} else {
+		return fmt.Errorf("unsupported file extension: %s", filepath.Ext(schemaFile))
+	}
+
 	if err != nil {
 		return err
 	}

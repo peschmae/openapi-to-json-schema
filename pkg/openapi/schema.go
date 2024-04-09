@@ -3,6 +3,8 @@ package openapi
 import (
 	"os"
 
+	"encoding/json"
+
 	"github.com/peschmae/openapi-to-json-schema/pkg/jsonschema"
 	"gopkg.in/yaml.v3"
 )
@@ -41,7 +43,7 @@ type Components struct {
 }
 
 // LoadOpenApiSchema loads an OpenAPI schema from a file, assumes the file exists and is in YAML format
-func LoadOpenApiSchema(file string) (*OpenAPI, error) {
+func LoadOpenApiYamlSchema(file string) (*OpenAPI, error) {
 	schema, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -57,7 +59,38 @@ func LoadOpenApiSchema(file string) (*OpenAPI, error) {
 	return &openApi, nil
 }
 
+// LoadOpenApiSchema loads an OpenAPI schema from a file, assumes the file exists and is in YAML format
+func LoadOpenApiJsonSchema(file string) (*OpenAPI, error) {
+	schema, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	openApi := OpenAPI{}
+
+	err = json.Unmarshal(schema, &openApi)
+	if err != nil {
+		return nil, err
+	}
+
+	return &openApi, nil
+}
+
 func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// indirection to avoid infinite recursion when unmarshaling
+	type rawSchema Schema
+	raw := rawSchema{
+		AdditionalProperties: true,
+	} // Put your defaults here
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*s = Schema(raw)
+	return nil
+}
+
+func (s *Schema) UnmarshalJSON(unmarshal func(interface{}) error) error {
 	// indirection to avoid infinite recursion when unmarshaling
 	type rawSchema Schema
 	raw := rawSchema{

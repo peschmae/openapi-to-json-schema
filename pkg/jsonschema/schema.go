@@ -28,3 +28,17 @@ func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	*s = Schema(raw)
 	return nil
 }
+
+func (s *Schema) UnmarshalJSON(unmarshal func(interface{}) error) error {
+	// indirection to avoid infinite recursion when unmarshaling
+	type rawSchema Schema
+	raw := rawSchema{
+		AdditionalProperties: true,
+	} // Put your defaults here
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*s = Schema(raw)
+	return nil
+}
