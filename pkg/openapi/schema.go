@@ -3,7 +3,7 @@ package openapi
 import (
 	"os"
 
-	"github.com/peschmae/opanpi-to-json-schema/pkg/jsonschema"
+	"github.com/peschmae/openapi-to-json-schema/pkg/jsonschema"
 	"gopkg.in/yaml.v3"
 )
 

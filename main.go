@@ -1,10 +1,9 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2024 Mathias Petermann <mathias.petermann@gmail.com>
 */
 package main
 
-import "github.com/peschmae/opanpi-to-json-schema/cmd"
+import "github.com/peschmae/openapi-to-json-schema/cmd"
 
 func main() {
 	cmd.Execute()

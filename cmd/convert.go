@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/peschmae/opanpi-to-json-schema/pkg/openapi"
+	"github.com/peschmae/openapi-to-json-schema/pkg/openapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -48,6 +48,9 @@ func NewConvertCmd() *cobra.Command {
 	cmd.Flags().StringP("id", "i", "https://example.biz/schema/ytt/data-values.json", "ID of the JSON schema")
 	viper.BindPFlag("id", cmd.Flags().Lookup("id"))
 
+	cmd.Flags().StringP("output", "o", "", "Output file. If not set, output is written to stdout")
+	viper.BindPFlag("output", cmd.Flags().Lookup("output"))
+
 	return cmd
 }
 
@@ -69,8 +72,17 @@ func convert(schemaFile string) error {
 		return err
 	}
 
-	// write to stdout
-	fmt.Println(string(jsonSchemaBytes))
+	if output := viper.GetString("output"); output != "" {
+		// write to file
+		err = os.WriteFile(output, jsonSchemaBytes, 0644)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		// write to stdout
+		fmt.Println(string(jsonSchemaBytes))
+	}
 
 	return nil
 }

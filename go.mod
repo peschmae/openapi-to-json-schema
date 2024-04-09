@@ -1,4 +1,4 @@
-module github.com/peschmae/opanpi-to-json-schema
+module github.com/peschmae/openapi-to-json-schema
 
 go 1.22.2
 
