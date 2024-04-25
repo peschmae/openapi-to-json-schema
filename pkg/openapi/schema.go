@@ -1,3 +1,6 @@
+/*
+Copyright © 2024 Mathias Petermann <mathias.petermann@gmail.com>
+*/
 package openapi
 
 import (
@@ -26,12 +29,19 @@ type Info struct {
 // Schema is a representation of a schema in a parameter in an operation in a path in the paths section of an OpenAPI document
 type Schema struct {
 	Type                 string            `json:"type" yaml:"type"`
+	Title                string            `json:"title" yaml:"title"`
+	Description          string            `json:"description" yaml:"description"`
 	AdditionalProperties bool              `json:"additionalProperties" yaml:"additionalProperties"`
 	Items                *Schema           `json:"items" yaml:"items"`
+	Default              interface{}       `json:"default" yaml:"default"`
 	MinLength            int               `json:"minLength" yaml:"minLength"`
 	MaxLength            int               `json:"maxLength" yaml:"maxLength"`
-	Min                  int               `json:"min" yaml:"min"`
-	Max                  int               `json:"max" yaml:"max"`
+	Min                  int               `json:"minimum" yaml:"minimum"`
+	Max                  int               `json:"maximum" yaml:"maximum"`
+	MinItems             int               `json:"minItems,omitempty" yaml:"minItems,omitempty"`
+	MaxItems             int               `json:"maxItems,omitempty" yaml:"maxItems,omitempty"`
+	MinProperties        int               `json:"minProperties,omitempty" yaml:"minProperties,omitempty"`
+	MaxProperties        int               `json:"maxProperties,omitempty" yaml:"maxProperties,omitempty"`
 	Enum                 []interface{}     `json:"enum" yaml:"enum"`
 	Nullable             bool              `json:"nullable" yaml:"nullable"`
 	Properties           map[string]Schema `json:"properties" yaml:"properties"`
@@ -42,16 +52,11 @@ type Components struct {
 	Schemas map[string]Schema `json:"schemas" yaml:"schemas"`
 }
 
-// LoadOpenApiSchema loads an OpenAPI schema from a file, assumes the file exists and is in YAML format
-func LoadOpenApiYamlSchema(file string) (*OpenAPI, error) {
-	schema, err := os.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-
+// LoadOpenApiYamlSchema loads an OpenAPI schema from a byte array, assumes the schema is in YAML format
+func LoadOpenApiYamlSchema(schema []byte) (*OpenAPI, error) {
 	openApi := OpenAPI{}
 
-	err = yaml.Unmarshal(schema, &openApi)
+	err := yaml.Unmarshal(schema, &openApi)
 	if err != nil {
 		return nil, err
 	}
@@ -59,21 +64,37 @@ func LoadOpenApiYamlSchema(file string) (*OpenAPI, error) {
 	return &openApi, nil
 }
 
-// LoadOpenApiSchema loads an OpenAPI schema from a file, assumes the file exists and is in YAML format
-func LoadOpenApiJsonSchema(file string) (*OpenAPI, error) {
+// LoadOpenApiYamlSchemaFromFile loads an OpenAPI schema from a file, assumes the file exists and is in YAML format
+func LoadOpenApiYamlSchemaFromFile(file string) (*OpenAPI, error) {
 	schema, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
 
+	return LoadOpenApiYamlSchema(schema)
+
+}
+
+// LoadOpenApiJsonSchema loads an OpenAPI schema from a byte array, assumes the schema is in JSON format
+func LoadOpenApiJsonSchema(schema []byte) (*OpenAPI, error) {
 	openApi := OpenAPI{}
 
-	err = json.Unmarshal(schema, &openApi)
+	err := json.Unmarshal(schema, &openApi)
 	if err != nil {
 		return nil, err
 	}
 
 	return &openApi, nil
+}
+
+// LoadOpenApiJsonSchemaFromFile loads an OpenAPI schema from a file, assumes the file exists and is in YAML format
+func LoadOpenApiJsonSchemaFromFile(file string) (*OpenAPI, error) {
+	schema, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return LoadOpenApiJsonSchema(schema)
 }
 
 func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -122,17 +143,28 @@ func (o *OpenAPI) ConvertToJsonSchema(component string) (*jsonschema.Schema, err
 func convertProperty(s Schema) jsonschema.Schema {
 	property := jsonschema.Schema{
 		Type:                 []string{s.Type},
+		Title:                s.Title,
+		Description:          s.Description,
+		Default:              s.Default,
 		AdditionalProperties: s.AdditionalProperties,
 		MinLength:            s.MinLength,
 		MaxLength:            s.MaxLength,
 		Min:                  s.Min,
 		Max:                  s.Max,
+		MinItems:             s.MinItems,
+		MaxItems:             s.MaxItems,
+		MinProperties:        s.MinProperties,
+		MaxProperties:        s.MaxProperties,
 	}
 	if s.Nullable {
 		property.Type = append(property.Type, "null")
 	}
 	if len(s.Enum) > 0 {
 		property.Enum = s.Enum
+	}
+	if s.Items != nil {
+		i := convertProperty(*s.Items)
+		property.Items = &i
 	}
 	if s.Properties != nil {
 		property.Properties = make(map[string]jsonschema.Schema)
