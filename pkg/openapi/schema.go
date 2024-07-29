@@ -135,6 +135,9 @@ func (o *OpenAPI) ConvertToJsonSchema(component string) (*jsonschema.Schema, err
 	}
 	for k, s := range o.Components.Schemas[component].Properties {
 		property := convertProperty(s)
+		if property.Title == "" {
+			property.Title = k
+		}
 		schema.Properties[k] = property
 	}
 	return &schema, nil
@@ -169,7 +172,11 @@ func convertProperty(s Schema) jsonschema.Schema {
 	if s.Properties != nil {
 		property.Properties = make(map[string]jsonschema.Schema)
 		for k, v := range s.Properties {
-			property.Properties[k] = convertProperty(v)
+			p := convertProperty(v)
+			if p.Title == "" {
+				p.Title = k
+			}
+			property.Properties[k] = p
 		}
 	}
 	return property
