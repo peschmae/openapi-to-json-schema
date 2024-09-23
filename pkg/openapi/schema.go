@@ -43,7 +43,7 @@ type Schema struct {
 	MaxItems             int               `json:"maxItems,omitempty" yaml:"maxItems,omitempty"`
 	MinProperties        int               `json:"minProperties,omitempty" yaml:"minProperties,omitempty"`
 	MaxProperties        int               `json:"maxProperties,omitempty" yaml:"maxProperties,omitempty"`
-	Enum                 []interface{}     `json:"enum" yaml:"enum"`
+	Enum                 []interface{}     `json:"enum,omitempty" yaml:"enum,omitempty"`
 	Nullable             bool              `json:"nullable" yaml:"nullable"`
 	Properties           map[string]Schema `json:"properties" yaml:"properties"`
 }
@@ -149,7 +149,6 @@ func (o *OpenAPI) ConvertToJsonSchema(component string) (*jsonschema.Schema, err
 
 func convertProperty(s Schema) jsonschema.Schema {
 	property := jsonschema.Schema{
-		Type:                 []string{s.Type},
 		Title:                s.Title,
 		Description:          s.Description,
 		Default:              s.Default,
@@ -163,6 +162,11 @@ func convertProperty(s Schema) jsonschema.Schema {
 		MinProperties:        s.MinProperties,
 		MaxProperties:        s.MaxProperties,
 		Required:             []string{},
+	}
+	if s.Type != "" {
+		property.Type = []string{s.Type}
+	} else {
+		property.Type = []string{"object"}
 	}
 	if s.Nullable {
 		property.Type = append(property.Type, "null")
