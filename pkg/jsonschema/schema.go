@@ -13,7 +13,7 @@ type Schema struct {
 	Default              interface{}       `json:"default,omitempty"`
 	Description          string            `json:"description,omitempty"`
 	Properties           map[string]Schema `json:"properties,omitempty"`
-	AdditionalProperties bool              `json:"additionalProperties"`
+	AdditionalProperties *bool             `json:"additionalProperties,omitempty"`
 	MinLength            int               `json:"minLength,omitempty"`
 	MaxLength            int               `json:"maxLength,omitempty"`
 	Min                  int               `json:"minimum,omitempty"`
@@ -28,9 +28,8 @@ type Schema struct {
 func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// indirection to avoid infinite recursion when unmarshaling
 	type rawSchema Schema
-	raw := rawSchema{
-		AdditionalProperties: true,
-	} // Put your defaults here
+	raw := rawSchema{} // Put your defaults here
+
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
@@ -42,9 +41,7 @@ func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func (s *Schema) UnmarshalJSON(unmarshal func(interface{}) error) error {
 	// indirection to avoid infinite recursion when unmarshaling
 	type rawSchema Schema
-	raw := rawSchema{
-		AdditionalProperties: true,
-	} // Put your defaults here
+	raw := rawSchema{} // Put your defaults here
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}

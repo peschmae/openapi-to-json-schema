@@ -31,7 +31,7 @@ type Schema struct {
 	Type                 string            `json:"type" yaml:"type"`
 	Title                string            `json:"title" yaml:"title"`
 	Description          string            `json:"description" yaml:"description"`
-	AdditionalProperties bool              `json:"additionalProperties" yaml:"additionalProperties"`
+	AdditionalProperties *bool             `json:"additionalProperties,omitempty" yaml:"additionalProperties,omitempty"`
 	Items                *Schema           `json:"items" yaml:"items"`
 	Default              interface{}       `json:"default" yaml:"default"`
 	MinLength            int               `json:"minLength" yaml:"minLength"`
@@ -100,9 +100,8 @@ func LoadOpenApiJsonSchemaFromFile(file string) (*OpenAPI, error) {
 func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// indirection to avoid infinite recursion when unmarshaling
 	type rawSchema Schema
-	raw := rawSchema{
-		AdditionalProperties: true,
-	} // Put your defaults here
+	raw := rawSchema{} // Put your defaults here
+
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
@@ -114,9 +113,8 @@ func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
 func (s *Schema) UnmarshalJSON(unmarshal func(interface{}) error) error {
 	// indirection to avoid infinite recursion when unmarshaling
 	type rawSchema Schema
-	raw := rawSchema{
-		AdditionalProperties: true,
-	} // Put your defaults here
+	raw := rawSchema{} // Put your defaults here
+
 	if err := unmarshal(&raw); err != nil {
 		return err
 	}
@@ -130,9 +128,10 @@ func (o *OpenAPI) ConvertToJsonSchema(component string) (*jsonschema.Schema, err
 		Schema:               "https://json-schema.org/draft/2020-12/schema",
 		Id:                   "https://example.biz/schema/ytt/data-values.json",
 		Type:                 []string{"object"},
-		AdditionalProperties: false,
+		AdditionalProperties: new(bool),
 		Properties:           make(map[string]jsonschema.Schema),
 	}
+	*schema.AdditionalProperties = false
 	for k, s := range o.Components.Schemas[component].Properties {
 		property := convertProperty(s)
 		if property.Title == "" {
