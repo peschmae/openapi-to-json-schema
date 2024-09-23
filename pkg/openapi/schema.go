@@ -5,6 +5,7 @@ package openapi
 
 import (
 	"os"
+	"slices"
 
 	"encoding/json"
 
@@ -123,6 +124,10 @@ func (s *Schema) UnmarshalJSON(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+func (s *Schema) isRequired() bool {
+	return s.MinItems > 0 || s.MinLength > 0 || s.Min > 0 || s.MinProperties > 0 || (len(s.Enum) > 0 && !slices.Contains(s.Enum, s.Default))
+}
+
 func (o *OpenAPI) ConvertToJsonSchema(component string) (*jsonschema.Schema, error) {
 	schema := jsonschema.Schema{
 		Schema:               "https://json-schema.org/draft/2020-12/schema",
@@ -157,6 +162,7 @@ func convertProperty(s Schema) jsonschema.Schema {
 		MaxItems:             s.MaxItems,
 		MinProperties:        s.MinProperties,
 		MaxProperties:        s.MaxProperties,
+		Required:             []string{},
 	}
 	if s.Nullable {
 		property.Type = append(property.Type, "null")
@@ -176,6 +182,9 @@ func convertProperty(s Schema) jsonschema.Schema {
 				p.Title = k
 			}
 			property.Properties[k] = p
+			if v.isRequired() || p.IsRequired() {
+				property.Required = append(property.Required, k)
+			}
 		}
 	}
 	return property

@@ -23,6 +23,7 @@ type Schema struct {
 	MinProperties        int               `json:"minProperties,omitempty"`
 	MaxProperties        int               `json:"maxProperties,omitempty"`
 	Enum                 []interface{}     `json:"enum,omitempty"`
+	Required             []string          `json:"required,omitempty"`
 }
 
 func (s *Schema) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -48,4 +49,8 @@ func (s *Schema) UnmarshalJSON(unmarshal func(interface{}) error) error {
 
 	*s = Schema(raw)
 	return nil
+}
+
+func (s *Schema) IsRequired() bool {
+	return len(s.Required) > 0
 }
