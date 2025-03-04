@@ -4,7 +4,7 @@ on:
   push:
     branches: ['main']
     tags:
-      - '*'
+      - '*.*.*'
 
 env:
   REGISTRY: ghcr.io
@@ -16,11 +16,12 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
+
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
@@ -54,7 +55,7 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+
       - name: Sign the published Docker image
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
